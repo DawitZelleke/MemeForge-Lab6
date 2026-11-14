@@ -2,10 +2,26 @@
 
 declare(strict_types=1);
 
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+
+// Send every protection before any body output or session startup.
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+header_remove('X-Powered-By');
+
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/images.php';
 
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        // Enable Secure when served directly over HTTPS; keep HTTP localhost usable.
+        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    ]);
     session_start();
 }
 
@@ -233,11 +249,8 @@ function render_header(string $title = APP_NAME): void
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> · <?= e(APP_NAME) ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet">
     <link href="assets/app.css" rel="stylesheet">
-    <style>
-        .navbar-brand .brand-mark { color: #ffc93c; }
-    </style>
 </head>
 
 <body class="bg-body-tertiary">
@@ -284,7 +297,7 @@ function render_footer(): void
     <footer class="container text-center text-body-secondary py-4 small">
         <?= e(APP_NAME) ?> — CST8265 lab application. For educational use only.
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"></script>
 </body>
 
 </html>
@@ -298,40 +311,6 @@ function render_footer(): void
 function render_preview_script(): void
 {
 ?>
-    <script>
-        (function () {
-            var top = document.getElementById('top_text');
-            var bottom = document.getElementById('bottom_text');
-            var previewTop = document.getElementById('preview-top');
-            var previewBottom = document.getElementById('preview-bottom');
-            var previewImg = document.getElementById('preview-img');
-            var template = document.getElementById('template');
-
-            function syncText() {
-                previewTop.textContent = top.value;
-                previewBottom.textContent = bottom.value;
-            }
-            top.addEventListener('input', syncText);
-            bottom.addEventListener('input', syncText);
-
-            if (template) {
-                template.addEventListener('change', function () {
-                    var opt = template.options[template.selectedIndex];
-                    previewImg.src = opt.getAttribute('data-src');
-                });
-            }
-
-            // Show only the inputs for the chosen image source.
-            var radios = document.querySelectorAll('input[name="source"]');
-            function syncSource() {
-                radios.forEach(function (r) {
-                    var panel = document.getElementById('source-' + r.value);
-                    if (panel) { panel.hidden = !r.checked; }
-                });
-            }
-            radios.forEach(function (r) { r.addEventListener('change', syncSource); });
-            syncSource();
-        })();
-    </script>
+    <script src="assets/preview.js" defer></script>
 <?php
 }
