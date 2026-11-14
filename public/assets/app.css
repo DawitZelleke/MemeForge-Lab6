@@ -52,7 +52,3 @@
 
 .meme-top { top: 3%; }
 .meme-bottom { bottom: 3%; }
-
-/* Shared layout styles, externalized for strict CSP. */
-.navbar-brand .brand-mark { color: #ffc93c; }
-.meme-preview-sticky { top: 1rem; z-index: 1; }
